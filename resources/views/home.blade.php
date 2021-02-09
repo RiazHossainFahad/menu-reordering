@@ -15,6 +15,12 @@
                     @endif
 
                     {{ __('You are logged in!') }}
+
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <a href="{{ route('payment.create') }}" class="btn btn-info text-white">Payment</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

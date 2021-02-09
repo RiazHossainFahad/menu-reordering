@@ -25,7 +25,7 @@ class HomeController extends Controller
      */
     public function index()
     {
-        Mail::to(auth()->user()->email)->send(new TaskMail(auth()->user()->name, 'Test task detail!'));
+        // Mail::to(auth()->user()->email)->send(new TaskMail(auth()->user()->name, 'Test task detail!'));
         return view('home');
     }
 }

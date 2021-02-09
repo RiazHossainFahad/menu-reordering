@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MenuController;
 use App\Http\Controllers\SquarePaymentController;
 
 /*
@@ -25,3 +26,8 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 
 Route::get('/payment', [SquarePaymentController::class, 'create'])->name('payment.create');
 Route::post('/payment', [SquarePaymentController::class, 'store'])->name('payment.store');
+
+Route::group(['middleware' => ['auth']], function () {
+    Route::resource('menu', MenuController::class);
+    Route::post('menu/sortable', [MenuController::class, 'sortableMenu'])->name('menu.sortable');
+});

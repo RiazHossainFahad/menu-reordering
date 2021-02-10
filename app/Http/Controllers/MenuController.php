@@ -63,7 +63,7 @@ class MenuController extends Controller
             return redirect()->back();
         }
         // Decode sortable menu
-        $menus = json_decode($request->sortable_menu)[0];
+        $menus = json_decode($request->sortable_menu);
 
         // Delete old data
         Menu::truncate();
@@ -77,7 +77,7 @@ class MenuController extends Controller
             $menu->save();
 
             if (isset($m->children) && $m->children) {
-                foreach ($m->children[0] as $c) {
+                foreach ($m->children as $c) {
                     // Store child menu
                     $child = new Menu();
                     $child->title = $c->title;

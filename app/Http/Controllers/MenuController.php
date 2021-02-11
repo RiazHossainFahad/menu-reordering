@@ -111,7 +111,9 @@ class MenuController extends Controller
      */
     public function edit(Menu $menu)
     {
-        //
+        $parent_menus = Menu::where('parent_id', null)->get();
+
+        return view('menu.edit', compact('menu', 'parent_menus'));
     }
 
     /**
@@ -123,7 +125,21 @@ class MenuController extends Controller
      */
     public function update(Request $request, Menu $menu)
     {
-        //
+        $this->validate($request, [
+            'title' => 'required|string|min:2|max:50|unique:menus,title,' . $menu->id,
+            'parent' => 'nullable|numeric',
+            'link_url' => 'nullable'
+        ]);
+
+        $menu->title = $request->title;
+        $menu->parent_id = $request->parent ?? null;
+
+        $menu->link_url = $request->link_url ?? '#';
+
+        $menu->save();
+
+        session()->flash('status', 'Menu updated successfully!');
+        return redirect()->route('menu.index');
     }
 
     /**
@@ -134,6 +150,9 @@ class MenuController extends Controller
      */
     public function destroy(Menu $menu)
     {
-        //
+        $menu->delete();
+
+        session()->flash('status', 'Menu deleted successfully!');
+        return redirect()->route('menu.index');
     }
 }

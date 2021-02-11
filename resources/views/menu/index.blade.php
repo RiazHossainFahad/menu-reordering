@@ -21,24 +21,33 @@
 										<li class="dd-item" data-id="{{ $menu->id }}" data-title="{{ $menu->title }}"
 											data-link_url="{{ $menu->link_url }}"
 											data-status="{{ $menu->status }}">
-											<div class="dd-handle">{{ $menu->title }}
-												<span class="float-right">
-													<a href="#" class="text-info"><i class="fa fa-edit"></i></a>
-													<a href="#" class="text-danger"><i class="fa fa-trash"></i></a>
-												</span>
-											</div>
+											<div class="dd-handle">{{ $menu->title }}</div>
+											<span class="position-absolute action">
+												<a href="{{ route('menu.edit', $menu->id) }}" class="text-info"><i class="fa fa-edit"></i></a>
+												<a href="javascript:void(0)" class="sa-delete text-danger" data-form-id="{{ 'delete-form_'.$menu->id }}"><i class="fa fa-trash"></i></a>
+
+												<form method="POST" id="{{ 'delete-form_'.$menu->id }}" action="{{ route('menu.destroy', $menu->id) }}">
+													@csrf
+													@method('DELETE')
+												</form>
+											</span>
 											<ol class="dd-list">
 												@foreach($menu->childs as $child)
 													<li class="dd-item" data-id="{{ $child->id }}" data-title="{{ $child->title }}"
 														data-link_url="{{ $child->link_url }}"
 														data-status="{{ $child->status }}">
-														<div class="dd-handle">
+														<div class="dd-handle position-relative">
 															{{ $child->title }}
-															<span class="float-right">
-																<a href="#" class="text-info"><i class="fa fa-edit"></i></a>
-																<a href="#" class="text-danger"><i class="fa fa-trash"></i></a>
-															</span>
 														</div>
+														<span class="position-absolute action">
+															<a href="{{ route('menu.edit', $child->id) }}" class="text-info"><i class="fa fa-edit"></i></a>
+															<a href="javascript:void(0)" class="sa-delete text-danger" data-form-id="{{ 'delete-form_'.$child->id }}"><i class="fa fa-trash"></i></a>
+
+															<form method="POST" id="{{ 'delete-form_'.$child->id }}" action="{{ route('menu.destroy', $child->id) }}">
+																@csrf
+																@method('DELETE')
+															</form>
+														</span>
 													</li>
 												@endforeach
 											</ol>
@@ -47,13 +56,18 @@
 										<li class="dd-item" data-id="{{ $menu->id }}" data-title="{{ $menu->title }}"
 											data-link_url="{{ $menu->link_url }}"
 											data-status="{{ $menu->status }}">
-											<div class="dd-handle">
+											<div class="dd-handle position-relative">
 												{{ $menu->title }}
-												<span class="float-right">
-													<a href="#" class="text-info"><i class="fa fa-edit"></i></a>
-													<a href="#" class="text-danger"><i class="fa fa-trash"></i></a>
-												</span>
 											</div>
+											<span class="position-absolute action">
+												<a href="{{ route('menu.edit', $menu->id) }}" class="text-info"><i class="fa fa-edit"></i></a>
+												<a href="javascript:void(0)" class="sa-delete text-danger" data-form-id="{{ 'delete-form_'.$menu->id }}"><i class="fa fa-trash"></i></a>
+
+												<form method="POST" id="{{ 'delete-form_'.$menu->id }}" action="{{ route('menu.destroy', $menu->id) }}">
+													@csrf
+													@method('DELETE')
+												</form>
+											</span>
 										</li>
 									@endif
 								@endforeach
@@ -84,6 +98,10 @@
 
 @push('style')
 <style type="text/css">
+	.action {
+		top: 5px;
+		right: 10px;
+	}
 	.cf:after {
 		visibility: hidden;
 		display: block;
@@ -162,8 +180,10 @@
 		color: #2ea8e5;
 		background: #fff;
 	}
-
 	.dd-item>button {
+		display: none;
+	}
+	/* .dd-item>button {
 		display: block;
 		position: relative;
 		cursor: pointer;
@@ -194,7 +214,7 @@
 
 	.dd-item>button[data-action="collapse"]:before {
 		content: '-';
-	}
+	} */
 
 	.dd-placeholder,
 	.dd-empty {
@@ -241,10 +261,11 @@
 	}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.14.0/sweetalert2.min.css" integrity="sha512-A374yR9LJTApGsMhH1Mn4e9yh0ngysmlMwt/uKPpudcFwLNDgN3E9S/ZeHcWTbyhb5bVHCtvqWey9DLXB4MmZg==" crossorigin="anonymous" />
 @endpush
 
 @push('script')
-{{-- Jquery sortable --}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.14.0/sweetalert2.min.js" integrity="sha512-tiZ8585M9G8gIdInZMGGXgEyFdu8JJnQbIcZYHaQxq+MP4+T8bkvA+TfF9BjPmiePjhBhev3bQ6nloOB1zF9EA==" crossorigin="anonymous"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 <script type="text/javascript">
 	var jQuery_1_11_1 = $.noConflict(true);
@@ -270,6 +291,32 @@
 
 		// output initial serialised data
 		updateOutput($('#nestable').data('output', $('#nestable-output')));
+
+		$(document).on('click', '.sa-delete', function () {
+            let form_id = $(this).data("form-id");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#02a499",
+                cancelButtonColor: "#ec4561",
+                confirmButtonText: "Yes, delete it!"
+            }).then(function (result) {
+                if (result.value) {
+                    Swal.fire('Deleted!', '', 'success')
+                    $('#' + form_id).submit();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Cancelled!',
+                        showConfirmButton: false,
+                        timer: 1500
+                    })
+                }
+            });
+        });
 	}(jQuery_1_11_1));
 </script>
 @endpush

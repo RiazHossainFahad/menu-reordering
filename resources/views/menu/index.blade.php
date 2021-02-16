@@ -23,7 +23,7 @@
 											data-status="{{ $menu->status }}">
 											<div class="dd-handle">{{ $menu->title }}</div>
 											<span class="position-absolute action">
-												<a href="{{ route('menu.edit', $menu->id) }}" class="text-info"><i class="fa fa-edit"></i></a>
+												<a href="javascript:void(0)" data-id="{{ $menu->id }}" class="text-info kf_menu_edit"><i class="fa fa-edit"></i></a>
 												<a href="javascript:void(0)" class="sa-delete text-danger" data-form-id="{{ 'delete-form_'.$menu->id }}"><i class="fa fa-trash"></i></a>
 
 												<form method="POST" id="{{ 'delete-form_'.$menu->id }}" action="{{ route('menu.destroy', $menu->id) }}">
@@ -40,7 +40,7 @@
 															{{ $child->title }}
 														</div>
 														<span class="position-absolute action">
-															<a href="{{ route('menu.edit', $child->id) }}" class="text-info"><i class="fa fa-edit"></i></a>
+															<a href="javascript:void(0)" data-id="{{ $child->id }}" class="text-info kf_menu_edit"><i class="fa fa-edit"></i></a>
 															<a href="javascript:void(0)" class="sa-delete text-danger" data-form-id="{{ 'delete-form_'.$child->id }}"><i class="fa fa-trash"></i></a>
 
 															<form method="POST" id="{{ 'delete-form_'.$child->id }}" action="{{ route('menu.destroy', $child->id) }}">
@@ -60,7 +60,7 @@
 												{{ $menu->title }}
 											</div>
 											<span class="position-absolute action">
-												<a href="{{ route('menu.edit', $menu->id) }}" class="text-info"><i class="fa fa-edit"></i></a>
+												<a href="javascript:void(0)" data-id="{{ $menu->id }}" class="text-info kf_menu_edit"><i class="fa fa-edit"></i></a>
 												<a href="javascript:void(0)" class="sa-delete text-danger" data-form-id="{{ 'delete-form_'.$menu->id }}"><i class="fa fa-trash"></i></a>
 
 												<form method="POST" id="{{ 'delete-form_'.$menu->id }}" action="{{ route('menu.destroy', $menu->id) }}">
@@ -92,6 +92,75 @@
 			</div>
 		</div> <!-- end col -->
 	</div> <!-- end row --> 
+
+	<!-- Modal -->
+<div class="modal fade" id="menuEditModal" tabindex="-1" role="dialog" aria-labelledby="menuEditModalTitle" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+	  <div class="modal-content">
+		<div class="modal-header">
+		  <h5 class="modal-title" id="exampleModalLongTitle">Edit Menu</h5>
+		  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			<span aria-hidden="true">&times;</span>
+		  </button>
+		</div>
+		<div class="modal-body">
+			<form action="" method="POST">
+				<div class="d-none alert alert-danger">
+					<ul class="kf_error">
+
+					</ul>
+				</div>
+				<div class="form-group">
+					<label>Parent Menu <span>(Optional)</span></label>
+					<div>
+						<select class="form-control" name="parent" id="kf_parent">
+							{{-- <option value="">Select parent</option> --}}
+						{{-- @if($parent_menus)
+							@foreach($parent_menus as $p_menu)
+								<option value="{{ $p_menu->id }}" {{ $p_menu->id == $menu->parent_id ? 'selected' : '' }}>{{ $p_menu->title }}</option>
+							@endforeach
+						@endif --}}
+						</select>
+					</div>
+				</div>
+
+				<div class="form-group d-none">
+					<label>Menu ID<span class="required">*</span></label>
+					<div>
+						<input type="hidden" name="menu_id" id="kf_menu_id" class="form-control" placeholder="Menu id" required/>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label>Menu Title<span class="required">*</span></label>
+					<div>
+						<input type="text" name="title" id="kf_title" class="form-control" placeholder="Menu name" required/>
+					</div>
+				</div>
+
+				<div class="form-group" id="link-box">
+					<label>Link URL</label>
+					<div>
+						<input type="text" name="link_url" id="kf_link_url" class="form-control" placeholder="Custom link"/>
+					</div>
+				</div>
+
+				<div class="form-group mb-0">
+					<div>
+						<button type="button" id="kf_submit" class="btn btn-primary waves-effect waves-light mr-1">
+							Submit
+						</button>
+
+						<button data-dismiss="modal" aria-label="Close" class="btn btn-secondary waves-effect">
+							Cancel
+						</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	  </div>
+	</div>
+  </div>
 </div>
 @endsection
 
@@ -266,10 +335,10 @@
 
 @push('script')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.14.0/sweetalert2.min.js" integrity="sha512-tiZ8585M9G8gIdInZMGGXgEyFdu8JJnQbIcZYHaQxq+MP4+T8bkvA+TfF9BjPmiePjhBhev3bQ6nloOB1zF9EA==" crossorigin="anonymous"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+{{-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 <script type="text/javascript">
 	var jQuery_1_11_1 = $.noConflict(true);
-</script>
+</script> --}}
 <script type="text/javascript" src="/sortable/jquery-nestable.js"></script>
 <script>
 
@@ -317,6 +386,72 @@
                 }
             });
         });
-	}(jQuery_1_11_1));
+	});
+</script>
+
+<script>
+	$(document).ready(function () {
+		let all_parents = @json($menus);
+		
+		$(document).on('click', '.kf_menu_edit', function () {
+			$('.kf_error').parent().addClass('d-none');
+
+			let menu_id = $(this).data('id');
+
+			axios.get(`/menu/${menu_id}`).then((res) => {
+				let data = res.data.menu;
+				$('#kf_menu_id').val(data.id);
+				$('#kf_title').val(data.title);
+				$('#kf_link_url').val(data.link_url);
+				
+				let select_option = '<option value="">Select parent</option>';
+
+				for (let index = 0; index < all_parents.length; index++) {
+					const element = all_parents[index];
+					if (data.parent_id == element.id) {
+						select_option += `<option value="${element.id}" selected>${element.title}</option>`;
+					} else {
+						select_option += `<option value="${element.id}">${element.title}</option>`;
+					}
+				}
+
+				$('#kf_parent').html(select_option);
+
+				$("#menuEditModal").modal('show');
+			})
+		})
+		
+		$(document).on('click', '#kf_submit', function () {
+			let menu_id = $('#kf_menu_id').val();
+			let data = {
+				'parent': $('#kf_parent').val(),			
+				'title': $('#kf_title').val(),			
+				'link_url': $('#kf_link_url').val(),			
+			};
+
+			axios.put(`/menu/${menu_id}`, data).then((res) => {
+				Swal.fire({
+					title: "Updated?",
+					text: "Manu updated successfully!",
+					type: "warning",
+					showCancelButton: false,
+					confirmButtonColor: "#02a499",
+					confirmButtonText: "Ok!"
+				}).then(function (result) {
+					window.location.reload();
+				});
+			}).catch((err)=>{
+				let li = '';
+				let errors = err.response.data.errors;
+				for (const key in errors) {
+					if (Object.hasOwnProperty.call(errors, key)) {
+						const element = errors[key];
+						li += `<li>${element[0]}</li>`;
+					}
+				}
+				$('.kf_error').parent().removeClass('d-none').html(li);
+			});
+		});
+	});
 </script>
 @endpush

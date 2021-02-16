@@ -100,7 +100,11 @@ class MenuController extends Controller
      */
     public function show(Menu $menu)
     {
-        //
+        if (request()->ajax()) {
+            return response()->json(['menu' => $menu], 200);
+        } else {
+            abort(404);
+        }
     }
 
     /**
@@ -138,6 +142,9 @@ class MenuController extends Controller
 
         $menu->save();
 
+        if ($request->ajax()) {
+            return response()->json(['menu' => $menu], 200);
+        }
         session()->flash('status', 'Menu updated successfully!');
         return redirect()->route('menu.index');
     }

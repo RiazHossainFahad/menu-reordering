@@ -108,6 +108,9 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('menu.index') }}">{{ __('Menu') }}</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/table">{{ __('Datatable') }}</a>
+                        </li>
                     </ul>
 
                     <!-- Right Side Of Navbar -->
